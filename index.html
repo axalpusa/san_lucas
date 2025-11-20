@@ -1087,12 +1087,12 @@
 
         // Imágenes de santos para el nivel 2
         const SAINTS = [
-            { id: 'sanlucas', name: 'San Lucas', image: 'https://cdn.pixabay.com/photo/2017/01/31/23/42/animal-2028258_960_720.png', correct: true },
-            { id: 'sanpedro', name: 'San Pedro', image: 'https://cdn.pixabay.com/photo/2017/01/31/23/42/animal-2028258_960_720.png', correct: false },
-            { id: 'santateresa', name: 'Santa Teresa', image: 'https://cdn.pixabay.com/photo/2017/01/31/23/42/animal-2028258_960_720.png', correct: false },
-            { id: 'sanandres', name: 'San Andrés', image: 'https://cdn.pixabay.com/photo/2017/01/31/23/42/animal-2028258_960_720.png', correct: true },
-            { id: 'virgenmaria', name: 'Virgen María', image: 'https://cdn.pixabay.com/photo/2017/01/31/23/42/animal-2028258_960_720.png', correct: false },
-            { id: 'sanjose', name: 'San José', image: 'https://cdn.pixabay.com/photo/2017/01/31/23/42/animal-2028258_960_720.png', correct: false }
+            { id: 'sanlucas', name: 'San Lucas', image: 'IMG_1508.png', correct: true },
+            { id: 'sanpedro', name: 'San Pedro', image: 'IMG_1574.PNG', correct: false },
+            { id: 'santateresa', name: 'Santa Teresa', image: 'IMG_1573.PNG', correct: false },
+            { id: 'sanandres', name: 'San Andrés', image: 'IMG_1572.PNG', correct: false },
+            { id: 'virgenmaria', name: 'Virgen María', image: 'IMG_1511.png', correct: true },
+            { id: 'sanjose', name: 'San José', image: 'IMG_1510.png', correct: true }
         ];
 
         // Elementos del altar para el nivel 3
@@ -1516,9 +1516,9 @@
                 </div>
                 
                 <h2>Nivel 2: El Guardián del Templo</h2>
-                <p>Identifica las imágenes de santos que aparecen en los retablos. Selecciona los 2 que correspondan.</p>
+                <p>Identifica las imágenes de santos que aparecen en los retablos. Selecciona los 3 que correspondan.</p>
                 <div class="santos-grid" id="santosGrid"></div>
-                <div style="margin-top:12px;font-size:14px;color:var(--muted);">Selecciona dos y presiona "Verificar"</div>
+                <div style="margin-top:12px;font-size:14px;color:var(--muted);">Selecciona tres y presiona "Verificar"</div>
                 <div style="margin-top:12px;">
                     <button id="checkSantos">Verificar</button>
                 </div>
@@ -1555,7 +1555,7 @@
                 name.textContent = s.name;
                 
                 card.appendChild(img);
-                card.appendChild(name);
+                //card.appendChild(name);
                 grid.appendChild(card);
             });
 
