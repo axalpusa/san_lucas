@@ -320,7 +320,7 @@
         
         .santo-card.selected {
             border-color: var(--accent);
-            box-shadow: 0 0 0 3px rgba(168,94,21,0.3);
+            box-shadow: 0 0 0 3px rgb(253, 236, 2);
         }
         
         .santo-img {
@@ -1577,8 +1577,8 @@
                 const sel = Array.from(grid.querySelectorAll('.santo-card.selected'));
                 const fb = document.getElementById('guardFeedback'); 
                 
-                if (sel.length < 2) { 
-                    fb.innerHTML = '<div class="feedback incorrect">Selecciona dos opciones.</div>'; 
+                if (sel.length < 3) { 
+                    fb.innerHTML = '<div class="feedback incorrect">Selecciona tres opciones.</div>'; 
                     return; 
                 }
                 
