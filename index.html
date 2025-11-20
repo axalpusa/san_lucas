@@ -1568,10 +1568,11 @@
                 
                 card.classList.toggle('selected');
                 
-                // Limit to 2
+                // Limitar a 3 seleccionados
                 const sel = grid.querySelectorAll('.santo-card.selected'); 
-                if (sel.length > 2) sel[0].classList.remove('selected');
+                if (sel.length > 3) sel[0].classList.remove('selected');
             });
+
 
             document.getElementById('checkSantos').addEventListener('click', () => {
                 const sel = Array.from(grid.querySelectorAll('.santo-card.selected'));
@@ -1583,7 +1584,9 @@
                 }
                 
                 const correctCount = sel.filter(s => s.dataset.correct === 'true').length;
-                if (correctCount >= 2) {
+
+                // Requiere 3 correctas
+                if (correctCount === 3) {
                     const points = 25;
                     fb.innerHTML = '<div class="feedback correct">¡Correcto! Has identificado santos representativos.</div>';
                     GAME.score += points; 
