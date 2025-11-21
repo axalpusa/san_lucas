@@ -955,13 +955,19 @@
         /* NUEVOS ESTILOS PARA SISTEMA DE DIFICULTAD */
         .difficulty-indicators {
             display: flex;
-            justify-content: space-between;
-            align-items: center;
+            flex-direction: column;
+            gap: 12px;
             margin-bottom: 16px;
             padding: 12px;
             background: rgba(253,230,174,0.3);
             border-radius: 10px;
             border-left: 4px solid var(--accent);
+        }
+        
+        .lives-timer-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
         }
         
         .lives-container {
@@ -1036,7 +1042,6 @@
             display: flex;
             align-items: center;
             gap: 8px;
-            margin-top: 8px;
         }
         
         .difficulty-stars {
@@ -1054,32 +1059,80 @@
             opacity: 0.3;
         }
         
-        .game-over {
-            text-align: center;
+        /* MODALES CENTRADOS */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 10000;
             padding: 20px;
-            background: var(--card);
-            border-radius: 10px;
-            border: 2px solid var(--warning);
-            margin-top: 20px;
         }
         
-        .game-over h3 {
+        .modal {
+            background: var(--card);
+            border-radius: 12px;
+            padding: 24px;
+            max-width: 500px;
+            width: 100%;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            border: 3px solid var(--accent);
+            text-align: center;
+        }
+        
+        .modal h3 {
+            color: var(--accent-dark);
+            margin-bottom: 16px;
+            font-size: 24px;
+        }
+        
+        .modal p {
+            margin-bottom: 20px;
+            line-height: 1.6;
+        }
+        
+        .modal-buttons {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        
+        .game-over-modal {
+            border-color: var(--warning);
+        }
+        
+        .game-over-modal h3 {
             color: var(--warning);
-            margin-bottom: 10px;
         }
         
-        .level-complete {
-            text-align: center;
-            padding: 20px;
-            background: var(--card);
-            border-radius: 10px;
-            border: 2px solid var(--success);
-            margin-top: 20px;
+        .level-complete-modal {
+            border-color: var(--success);
         }
         
-        .level-complete h3 {
+        .level-complete-modal h3 {
             color: var(--success);
-            margin-bottom: 10px;
+        }
+        
+        .trivia-modal {
+            border-color: var(--accent);
+        }
+        
+        .trivia-modal h3 {
+            color: var(--accent-dark);
+        }
+        
+        .error-modal {
+            border-color: var(--warning);
+        }
+        
+        .error-modal h3 {
+            color: var(--warning);
         }
     </style>
 </head>
@@ -1116,22 +1169,6 @@
 
         <main>
             <section class="card stage left" id="stage">
-                <!-- Indicadores de dificultad -->
-                <div class="difficulty-indicators" id="difficultyIndicators">
-                    <div class="lives-container">
-                        <div class="lives-title">Vidas:</div>
-                        <div class="lives" id="livesContainer"></div>
-                    </div>
-                    <div class="timer-container">
-                        <div class="timer-title">Tiempo:</div>
-                        <div class="timer" id="timer">00:00</div>
-                    </div>
-                    <div class="level-difficulty">
-                        <div>Dificultad:</div>
-                        <div class="difficulty-stars" id="difficultyStars"></div>
-                    </div>
-                </div>
-                
                 <div class="progress-container">
                     <div>Progreso del nivel</div>
                     <div class="progress-bar">
@@ -1180,6 +1217,24 @@
             </section>
 
             <aside class="card stage right">
+                <!-- Indicadores de dificultad sobre el muro de honor -->
+                <div class="difficulty-indicators" id="difficultyIndicators">
+                    <div class="lives-timer-container">
+                        <div class="lives-container">
+                            <div class="lives-title">Vidas:</div>
+                            <div class="lives" id="livesContainer"></div>
+                        </div>
+                        <div class="timer-container">
+                            <div class="timer-title">Tiempo:</div>
+                            <div class="timer" id="timer">00:00</div>
+                        </div>
+                    </div>
+                    <div class="level-difficulty">
+                        <div>Dificultad:</div>
+                        <div class="difficulty-stars" id="difficultyStars"></div>
+                    </div>
+                </div>
+                
                 <h3>Muro de Honor</h3>
                 <div class="muro" id="muro"></div>
                 
@@ -1191,6 +1246,20 @@
             </aside>
         </main>
     </div>
+
+    <!-- Elementos de audio ocultos -->
+    <audio id="soundCorrect" preload="auto">
+        <source src="https://assets.mixkit.co/sfx/preview/mixkit-correct-answer-tone-2870.mp3" type="audio/mpeg">
+    </audio>
+    <audio id="soundWrong" preload="auto">
+        <source src="https://assets.mixkit.co/sfx/preview/mixkit-wrong-answer-fail-notification-946.mp3" type="audio/mpeg">
+    </audio>
+    <audio id="soundWin" preload="auto">
+        <source src="https://assets.mixkit.co/sfx/preview/mixkit-winning-chimes-2015.mp3" type="audio/mpeg">
+    </audio>
+    <audio id="soundGameOver" preload="auto">
+        <source src="https://assets.mixkit.co/sfx/preview/mixkit-sad-game-over-trombone-471.mp3" type="audio/mpeg">
+    </audio>
 
     <script>
         // Datos del juego
@@ -1211,7 +1280,8 @@
             levelTimeLimits: {1: 180, 2: 150, 3: 120}, // Tiempos en segundos por nivel
             levelTimeRemaining: {1: 0, 2: 0, 3: 0},
             levelFailed: false,
-            levelComplete: false
+            levelComplete: false,
+            puzzleCompleted: {1: false, 2: false, 3: false}
         }
 
         // Personajes guía según la narrativa
@@ -1259,6 +1329,55 @@
             { id: 'flores', name: 'Flores', description: 'Símbolo de vida y belleza', correctPosition: 5 },
             { id: 'evangelio', name: 'Libro del Evangelio', description: 'Contiene la palabra de Dios', correctPosition: 6 }
         ];
+
+        // Preguntas de trivia por nivel
+        const TRIVIA_QUESTIONS = {
+            1: {
+                question: "¿De qué material está hecha la iglesia San Lucas de Colán?",
+                options: [
+                    { text: "Piedra Caliza", correct: true },
+                    { text: "Arcilla", correct: false },
+                    { text: "Madera y Barro", correct: false }
+                ]
+            },
+            2: {
+                question: "¿Cuál de los siguientes estilos artísticos es el más visible en los retablos dorados de la iglesia?",
+                options: [
+                    { text: "Gótico", correct: false },
+                    { text: "Barroco", correct: true },
+                    { text: "Modernista", correct: false }
+                ]
+            },
+            3: {
+                question: "¿Cuál es el nombre de la figura religiosa que aparece en la pila bautismal de la iglesia y que simboliza el bautismo?",
+                options: [
+                    { text: "San Pedro", correct: false },
+                    { text: "San Lucas", correct: true },
+                    { text: "San Andrés", correct: false }
+                ]
+            }
+        };
+
+        // Sistema de sonidos
+        const SOUNDS = {
+            correct: document.getElementById('soundCorrect'),
+            wrong: document.getElementById('soundWrong'),
+            win: document.getElementById('soundWin'),
+            gameOver: document.getElementById('soundGameOver')
+        };
+
+        // Función para reproducir sonidos
+        function playSound(soundName) {
+            try {
+                const sound = SOUNDS[soundName];
+                if (sound) {
+                    sound.currentTime = 0;
+                    sound.play().catch(e => console.log('Error reproduciendo sonido:', e));
+                }
+            } catch (error) {
+                console.log('Error con el sistema de sonido:', error);
+            }
+        }
 
         // Persistencia
         function load() {
@@ -1327,9 +1446,10 @@
                 timerEl.textContent = '00:00';
                 timerEl.classList.add('warning');
                 
-                // Si el tiempo se agota, perder una vida
+                // Si el tiempo se agota, mostrar game over
                 if (!GAME.levelFailed && !GAME.levelComplete) {
-                    loseLife();
+                    playSound('gameOver');
+                    gameOver();
                 }
                 return;
             }
@@ -1371,13 +1491,13 @@
             GAME.lives--;
             renderLives();
             
+            // Reproducir sonido de error
+            playSound('wrong');
+            
             if (GAME.lives <= 0) {
                 // Game over
+                playSound('gameOver');
                 gameOver();
-            } else {
-                showMessage(`Has perdido una vida. Te quedan ${GAME.lives} vidas.`, 'error');
-                // Reiniciar el nivel actual
-                restartCurrentLevel();
             }
         }
         
@@ -1387,23 +1507,26 @@
             // Detener temporizador
             clearInterval(GAME.timers[GAME.currentLevel]);
             
-            const gameOverHTML = `
-                <div class="game-over">
+            const modal = document.createElement('div');
+            modal.className = 'modal-overlay';
+            modal.innerHTML = `
+                <div class="modal game-over-modal">
                     <h3>¡Game Over!</h3>
                     <p>Te has quedado sin vidas. ¿Quieres intentarlo de nuevo?</p>
-                    <div style="margin-top: 16px;">
-                        <button id="restartGame">Reiniciar Juego</button>
+                    <div class="modal-buttons">
+                        <button id="restartLevel">Reiniciar Nivel</button>
                     </div>
                 </div>
             `;
             
-            content.innerHTML += gameOverHTML;
+            document.body.appendChild(modal);
             
-            document.getElementById('restartGame').addEventListener('click', () => {
+            document.getElementById('restartLevel').addEventListener('click', () => {
                 // Restaurar vidas y reiniciar nivel
                 GAME.lives = GAME.maxLives;
                 GAME.levelFailed = false;
                 renderLives();
+                modal.remove();
                 restartCurrentLevel();
             });
         }
@@ -1418,32 +1541,160 @@
             openLevel(currentLevel);
         }
         
-        function levelComplete() {
-            GAME.levelComplete = true;
+        function showTriviaModal(level) {
+            const trivia = TRIVIA_QUESTIONS[level];
             
-            // Detener temporizador
-            clearInterval(GAME.timers[GAME.currentLevel]);
-            
-            const levelCompleteHTML = `
-                <div class="level-complete">
-                    <h3>¡Nivel Completado!</h3>
-                    <p>Has restaurado esta parte de la iglesia y ganado ${GAME.levelScores[GAME.currentLevel]} puntos.</p>
-                    <div style="margin-top: 16px;">
-                        <button id="nextLevel">Siguiente Nivel</button>
+            const modal = document.createElement('div');
+            modal.className = 'modal-overlay';
+            modal.innerHTML = `
+                <div class="modal trivia-modal">
+                    <h3>Pregunta de Conocimiento</h3>
+                    <p>${trivia.question}</p>
+                    <div class="trivia-options">
+                        ${trivia.options.map((option, index) => 
+                            `<button data-correct="${option.correct}">${option.text}</button>`
+                        ).join('')}
                     </div>
                 </div>
             `;
             
-            content.innerHTML += levelCompleteHTML;
+            document.body.appendChild(modal);
             
-            document.getElementById('nextLevel').addEventListener('click', () => {
+            // Agregar event listeners a los botones
+            modal.querySelectorAll('button').forEach(button => {
+                button.addEventListener('click', () => {
+                    const isCorrect = button.dataset.correct === 'true';
+                    
+                    if (isCorrect) {
+                        // Respuesta correcta
+                        playSound('correct');
+                        const points = 10;
+                        GAME.score += points; 
+                        GAME.levelScores[level] += points;
+                        save(); 
+                        renderStatus(); 
+                        renderMuro();
+                        
+                        // Completar nivel
+                        completeLevel(level);
+                    } else {
+                        // Respuesta incorrecta
+                        playSound('wrong');
+                        
+                        // Crear modal de error con botones según las vidas restantes
+                        showErrorModalWithRetry(
+                            "Respuesta incorrecta.", 
+                            level,
+                            GAME.lives > 0
+                        );
+                    }
+                    
+                    modal.remove();
+                });
+            });
+        }
+        
+        function showErrorModalWithRetry(message, level, hasLives) {
+            const modal = document.createElement('div');
+            modal.className = 'modal-overlay';
+            
+            let buttonsHTML = '';
+            if (hasLives) {
+                buttonsHTML = `
+                    <button id="retryTrivia">Volver a Intentar</button>
+                `;
+            } else {
+                buttonsHTML = `
+                    <button id="restartLevel">Reiniciar Nivel</button>
+                `;
+            }
+            
+            modal.innerHTML = `
+                <div class="modal error-modal">
+                    <h3>Error</h3>
+                    <p>${message}</p>
+                    <div class="modal-buttons">
+                        ${buttonsHTML}
+                    </div>
+                </div>
+            `;
+            
+            document.body.appendChild(modal);
+            
+            if (hasLives) {
+                document.getElementById('retryTrivia').addEventListener('click', () => {
+                    modal.remove();
+                    // Quitar una vida y mostrar la trivia nuevamente
+                    loseLife();
+                    if (GAME.lives > 0) {
+                        showTriviaModal(level);
+                    }
+                });
+            } else {
+                document.getElementById('restartLevel').addEventListener('click', () => {
+                    modal.remove();
+                    restartCurrentLevel();
+                });
+            }
+        }
+        
+        function completeLevel(level) {
+            GAME.levelComplete = true;
+            
+            // Detener temporizador
+            clearInterval(GAME.timers[level]);
+            
+            // Reproducir sonido de victoria
+            playSound('win');
+            
+            const modal = document.createElement('div');
+            modal.className = 'modal-overlay';
+            modal.innerHTML = `
+                <div class="modal level-complete-modal">
+                    <h3>¡Nivel ${level} Completado!</h3>
+                    <p>Has restaurado esta parte de la iglesia y ganado ${GAME.levelScores[level]} puntos.</p>
+                    <div class="modal-buttons">
+                        <button id="continueBtn">Continuar</button>
+                    </div>
+                </div>
+            `;
+            
+            document.body.appendChild(modal);
+            
+            document.getElementById('continueBtn').addEventListener('click', () => {
                 GAME.levelComplete = false;
-                const nextLevel = GAME.currentLevel + 1;
-                if (nextLevel <= 3) {
-                    openLevel(nextLevel);
-                } else {
-                    showMessage('¡Felicidades! Has completado todos los niveles.', 'success');
+                modal.remove();
+                
+                // Desbloquear siguiente nivel
+                const nextLevel = level + 1;
+                if (nextLevel <= 3 && !GAME.unlocked.includes(nextLevel)) {
+                    GAME.unlocked.push(nextLevel);
+                    updateLevelButtons();
+                    showMessage('¡Nivel ' + nextLevel + ' desbloqueado!', 'success');
                 }
+                
+                // Volver al menú principal
+                openLevel(1);
+            });
+        }
+        
+        function showErrorModal(message) {
+            const modal = document.createElement('div');
+            modal.className = 'modal-overlay';
+            modal.innerHTML = `
+                <div class="modal error-modal">
+                    <h3>Error</h3>
+                    <p>${message}</p>
+                    <div class="modal-buttons">
+                        <button id="closeError">Aceptar</button>
+                    </div>
+                </div>
+            `;
+            
+            document.body.appendChild(modal);
+            
+            document.getElementById('closeError').addEventListener('click', () => {
+                modal.remove();
             });
         }
 
@@ -1454,7 +1705,7 @@
             
             const lvl = Number(btn.dataset.level);
             if (!GAME.unlocked.includes(lvl)) { 
-                showMessage('Nivel bloqueado. Completa niveles previos.', 'info');
+                showErrorModal('Nivel bloqueado. Completa niveles previos.');
                 return; 
             }
             
@@ -1600,7 +1851,7 @@
                 </div>
                 
                 <h2>Nivel 1: El Campanario</h2>
-                <p>El campanario está roto. Arma las piezas y responde la trivia para restaurarlo.</p>
+                <p>El campanario está roto. Arma las piezas para restaurarlo.</p>
                 <div class="puzzle-container">
                     <div class="puzzle" id="puzzleSlots"></div>
                     <div class="pieces-area">
@@ -1609,16 +1860,10 @@
                     </div>
                 </div>
                 <div style="margin-top:12px;font-size:14px;color:var(--muted);">Arrastra las piezas al lugar correcto.</div>
-                <div style="margin-top:20px" id="campTrivia">
-                    <h3>Trivia</h3>
-                    <p>¿De qué material está hecha la iglesia San Lucas de Colán?</p>
-                    <div class="trivia-options">
-                        <button data-answer="a">Piedra Caliza</button>
-                        <button data-answer="b">Arcilla</button>
-                        <button data-answer="c">Madera y Barro</button>
-                    </div>
-                    <div id="campFeedback" class="feedback"></div>
+                <div style="margin-top:12px;">
+                    <button id="checkPuzzle">Verificar Rompecabezas</button>
                 </div>
+                <div id="campFeedback" class="feedback"></div>
             `;
 
             // Build slots and draggable pieces
@@ -1714,9 +1959,12 @@
                         pieceEl.style.borderStyle = 'solid';
                         pieceEl.style.borderWidth = '2px';
                     }
-                    
-                    checkPuzzle();
                 });
+            });
+
+            // Botón de verificar rompecabezas
+            document.getElementById('checkPuzzle').addEventListener('click', () => {
+                checkPuzzle();
             });
 
             function checkPuzzle() {
@@ -1744,8 +1992,10 @@
                     return;
                 }
                 
-                if (allCorrect) {
-                    // Premiar al jugador
+                if (allCorrect && !GAME.puzzleCompleted[1]) {
+                    GAME.puzzleCompleted[1] = true;
+                    
+                    // Premiar al jugador por completar el puzzle
                     const points = 20;
                     GAME.score += points; 
                     GAME.levelScores[1] += points;
@@ -1769,41 +2019,19 @@
                     // Efecto visual
                     flashEffect('¡La campana suena de nuevo!');
                     
-                    // Desbloquear siguiente nivel
-                    if (!GAME.unlocked.includes(2)) {
-                        GAME.unlocked.push(2); 
-                        updateLevelButtons(); 
-                        showMessage('¡Nivel 2 desbloqueado!', 'success');
-                    }
+                    // Reproducir sonido de acierto
+                    playSound('correct');
                     
-                    // Marcar nivel como completado
-                    levelComplete();
+                    // Mostrar trivia después de completar el puzzle
+                    setTimeout(() => {
+                        showTriviaModal(1);
+                    }, 1500);
                     
                     save();
-                } else {
+                } else if (!allCorrect) {
                     document.getElementById('campFeedback').innerHTML = '<div class="feedback incorrect">Algunas piezas están en posición incorrecta. Corrige las marcadas en rojo.</div>';
                 }
             }
-
-            // Trivia buttons
-            document.querySelectorAll('#campTrivia button').forEach(bt => {
-                bt.addEventListener('click', () => {
-                    const ans = bt.dataset.answer; 
-                    const fb = document.getElementById('campFeedback');
-                    
-                    if (ans === 'a') { 
-                        const points = 10;
-                        fb.innerHTML = '<div class="feedback correct">¡Correcto! La iglesia esta hecha de piedra caliza.</div>'; 
-                        GAME.score += points; 
-                        GAME.levelScores[1] += points;
-                        save(); 
-                        renderStatus(); 
-                        renderMuro();
-                    } else { 
-                        fb.innerHTML = '<div class="feedback incorrect">No exactamente. La respuesta correcta es piedra caliza.</div>'; 
-                    }
-                });
-            });
         }
 
         // Level 2 - Identify saints + trivia
@@ -1831,16 +2059,6 @@
                     <button id="checkSantos">Verificar</button>
                 </div>
                 <div id="guardFeedback" style="margin-top:12px"></div>
-
-                <hr style="margin:20px 0;">
-                <h3>Trivia</h3>
-                <p>¿Cuál de los siguientes estilos artísticos es el más visible en los retablos dorados de la iglesia?</p>
-                <div class="trivia-options">
-                    <button data-answer="a">Gótico</button>
-                    <button data-answer="b">Barroco</button>
-                    <button data-answer="c">Modernista</button>
-                </div>
-                <div id="guardTriviaFb" style="margin-top:12px"></div>
             `;
 
             // Shuffle saints
@@ -1892,7 +2110,9 @@
                 const correctCount = sel.filter(s => s.dataset.correct === 'true').length;
 
                 // Requiere 3 correctas
-                if (correctCount === 3) {
+                if (correctCount === 3 && !GAME.puzzleCompleted[2]) {
+                    GAME.puzzleCompleted[2] = true;
+                    
                     const points = 25;
                     fb.innerHTML = '<div class="feedback correct">¡Correcto! Has identificado santos representativos.</div>';
                     GAME.score += points; 
@@ -1912,41 +2132,20 @@
                     updateProgressBar();
                     updateChurchVisual();
                     
-                    if (!GAME.unlocked.includes(3)) {
-                        GAME.unlocked.push(3); 
-                        updateLevelButtons();
-                        showMessage('¡Nivel 3 desbloqueado!', 'success');
-                    }
-                    
                     flashEffect('El retablo recobra su brillo');
                     
-                    // Marcar nivel como completado
-                    levelComplete();
+                    // Reproducir sonido de acierto
+                    playSound('correct');
+                    
+                    // Mostrar trivia después de completar el puzzle
+                    setTimeout(() => {
+                        showTriviaModal(2);
+                    }, 1500);
                 } else {
                     fb.innerHTML = '<div class="feedback incorrect">Algunas selecciones no son correctas. Observa los detalles barrocos y dorados.</div>';
                     // Perder una vida por respuesta incorrecta
                     loseLife();
                 }
-            });
-
-            // Trivia
-            document.querySelectorAll('[data-answer]').forEach(bt => {
-                bt.addEventListener('click', () => {
-                    const ans = bt.dataset.answer; 
-                    const fb = document.getElementById('guardTriviaFb');
-                    
-                    if (ans === 'b') { 
-                        const points = 10;
-                        fb.innerHTML = '<div class="feedback correct">Correcto: Barroco.</div>'; 
-                        GAME.score += points; 
-                        GAME.levelScores[2] += points;
-                        save(); 
-                        renderStatus(); 
-                        renderMuro();
-                    } else { 
-                        fb.innerHTML = '<div class="feedback incorrect">No exactamente. El estilo predominante es barroco.</div>'; 
-                    }
-                });
             });
         }
 
@@ -1994,16 +2193,6 @@
                     <button id="checkAltar">Verificar Altar</button>
                 </div>
                 <div id="altarFeedback" style="margin-top:12px"></div>
-
-                <hr style="margin:20px 0;">
-                <h3>Trivia</h3>
-                <p>¿Cuál es el nombre de la figura religiosa que aparece en la pila bautismal de la iglesia y que simboliza el bautismo?</p>
-                <div class="trivia-options">
-                    <button data-answer="a">San Pedro</button>
-                    <button data-answer="b">San Lucas</button>
-                    <button data-answer="c">San Andrés</button>
-                </div>
-                <div id="sacTriviaFb" style="margin-top:12px"></div>
             `;
 
             // Shuffle altar elements
@@ -2110,7 +2299,9 @@
                     return;
                 }
                 
-                if (allCorrect) {
+                if (allCorrect && !GAME.puzzleCompleted[3]) {
+                    GAME.puzzleCompleted[3] = true;
+                    
                     const points = 30;
                     fb.innerHTML = '<div class="feedback correct">¡Perfecto! El altar ha sido reconstruido correctamente.</div>';
                     GAME.score += points; 
@@ -2132,33 +2323,18 @@
                     
                     flashEffect('El altar recobra su esplendor dorado');
                     
-                    // Marcar nivel como completado
-                    levelComplete();
+                    // Reproducir sonido de acierto
+                    playSound('correct');
+                    
+                    // Mostrar trivia después de completar el puzzle
+                    setTimeout(() => {
+                        showTriviaModal(3);
+                    }, 1500);
                 } else {
                     fb.innerHTML = '<div class="feedback incorrect">Algunos elementos no están en su posición correcta. Revisa la tradición litúrgica.</div>';
                     // Perder una vida por respuesta incorrecta
                     loseLife();
                 }
-            });
-
-            // Trivia
-            document.querySelectorAll('[data-answer]').forEach(bt => {
-                bt.addEventListener('click', () => {
-                    const ans = bt.dataset.answer; 
-                    const fb = document.getElementById('sacTriviaFb');
-                    
-                    if (ans === 'b') { 
-                        const points = 10;
-                        fb.innerHTML = '<div class="feedback correct">Correcto: San Lucas aparece en la pila bautismal.</div>'; 
-                        GAME.score += points; 
-                        GAME.levelScores[3] += points;
-                        save(); 
-                        renderStatus(); 
-                        renderMuro();
-                    } else { 
-                        fb.innerHTML = '<div class="feedback incorrect">Respuesta incorrecta. La figura es San Lucas.</div>'; 
-                    }
-                });
             });
         }
 
