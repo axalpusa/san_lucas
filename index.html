@@ -217,7 +217,10 @@
         button.ghost:hover {
             background: rgba(168,94,21,0.1);
         }
-        
+        .incorrect-temp {
+            border: 2px solid var(--error) !important;
+            background-color: rgba(244, 67, 54, 0.1) !important;
+        }
         .hidden {
             display: none;
         }
@@ -2305,9 +2308,8 @@
                 }
                 // Si ya hay 3 seleccionadas, no hacer nada
             });
-
             document.getElementById('checkSantos').addEventListener('click', () => {
-                const fb = document.getElementById('guardFeedback'); 
+                const fb = document.getElementById('guardFeedback');
                 
                 if (selectedCards.length < 3) { 
                     fb.innerHTML = '<div class="feedback incorrect">Selecciona exactamente tres opciones.</div>'; 
@@ -2325,52 +2327,74 @@
 
                 console.log("Seleccionadas:", selectedCards);
                 console.log("Correctas encontradas:", correctCount);
+                console.log("Puzzle ya completado?:", GAME.puzzleCompleted[2]);
 
-                // Requiere EXACTAMENTE 3 correctas (todas las selecciones deben ser correctas)
-                if (correctCount === 3 && !GAME.puzzleCompleted[2]) {
-                    GAME.puzzleCompleted[2] = true;
-                    
-                    const points = 25;
-                    fb.innerHTML = '<div class="feedback correct">¡Correcto! Has identificado correctamente los santos representativos.</div>';
-                    GAME.score += points; 
-                    GAME.levelScores[2] += points;
-                    GAME.pieces += 1; 
-                    if (!GAME.collectibles.includes(2)) {
-                        GAME.collectibles.push(2); 
+                // Verificar primero si la selección es correcta, independientemente del estado del puzzle
+                if (correctCount === 3) {
+                    // Selección correcta
+                    if (!GAME.puzzleCompleted[2]) {
+                        // Primera vez que completa el puzzle
+                        GAME.puzzleCompleted[2] = true;
+                        
+                        const points = 25;
+                        fb.innerHTML = '<div class="feedback correct">¡Correcto! Has identificado correctamente los santos representativos.</div>';
+                        GAME.score += points; 
+                        GAME.levelScores[2] += points;
+                        GAME.pieces += 1; 
+                        if (!GAME.collectibles.includes(2)) {
+                            GAME.collectibles.push(2); 
+                        }
+                        GAME.muro.push({name: 'Jugador local', score: GAME.score});
+                        GAME.progress[2] = 100;
+                        GAME.churchRestored.windows = true;
+                        
+                        save(); 
+                        renderStatus(); 
+                        renderCollectibles(); 
+                        renderMuro();
+                        updateProgressBar();
+                        updateChurchVisual();
+                        
+                        flashEffect('El retablo recobra su brillo');
+                        playSound('correct');
+                        
+                        setTimeout(() => {
+                            showTriviaModal(2);
+                        }, 1500);
+                    } else {
+                        // Ya había completado el puzzle, pero seleccionó correctamente
+                        fb.innerHTML = '<div class="feedback correct">¡Correcto! Ya habías completado este nivel anteriormente.</div>';
                     }
-                    GAME.muro.push({name: 'Jugador local', score: GAME.score});
-                    GAME.progress[2] = 100;
-                    GAME.churchRestored.windows = true;
                     
-                    save(); 
-                    renderStatus(); 
-                    renderCollectibles(); 
-                    renderMuro();
-                    updateProgressBar();
-                    updateChurchVisual();
+                    // Mantener las selecciones para mostrar feedback visual
+                    // No limpiar selectedCards aquí
                     
-                    flashEffect('El retablo recobra su brillo');
-                    
-                    // Reproducir sonido de acierto
-                    playSound('correct');
-                    
-                    // Mostrar trivia después de completar el puzzle
-                    setTimeout(() => {
-                        showTriviaModal(2);
-                    }, 1500);
                 } else {
+                    // Selección incorrecta
                     fb.innerHTML = '<div class="feedback incorrect">No todas las selecciones son correctas. Debes seleccionar exactamente los tres santos correctos.</div>';
-                    // Perder una vida por respuesta incorrecta
+                    
+                    // Mostrar cuáles fueron incorrectas
+                    selectedCards.forEach(cardId => {
+                        const saint = SAINTS.find(s => s.id === cardId);
+                        if (saint && !saint.correct) {
+                            const incorrectCard = document.querySelector(`[data-id="${cardId}"]`);
+                            incorrectCard.classList.add('incorrect-temp');
+                        }
+                    });
+                    
                     loseLife();
                     
-                    // Limpiar selecciones para nuevo intento
-                    selectedCards = [];
-                    document.querySelectorAll('.santo-card.selected').forEach(card => {
-                        card.classList.remove('selected');
-                    });
+                    // Limpiar selecciones después de un tiempo
+                    setTimeout(() => {
+                        selectedCards = [];
+                        document.querySelectorAll('.santo-card.selected').forEach(card => {
+                            card.classList.remove('selected', 'incorrect-temp');
+                        });
+                        fb.innerHTML = '';
+                    }, 3000);
                 }
             });
-        }
+   }
 
         // Level 3 - Reconstrucción del Altar
         function levelSacerdote() {
