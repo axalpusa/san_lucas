@@ -1487,14 +1487,14 @@
                     
                     if (ans === 'a') { 
                         const points = 10;
-                        fb.innerHTML = '<div class="feedback correct">¡Correcto! La iglesia se construyó en 1536.</div>'; 
+                        fb.innerHTML = '<div class="feedback correct">¡Correcto! La iglesia esta hecha de piedra caliza.</div>'; 
                         GAME.score += points; 
                         GAME.levelScores[1] += points;
                         save(); 
                         renderStatus(); 
                         renderMuro();
                     } else { 
-                        fb.innerHTML = '<div class="feedback incorrect">No exactamente. La respuesta correcta es 1536.</div>'; 
+                        fb.innerHTML = '<div class="feedback incorrect">No exactamente. La respuesta correcta es piedra caliza.</div>'; 
                     }
                 });
             });
