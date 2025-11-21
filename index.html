@@ -2332,7 +2332,7 @@
                 // Verificar primero si la selección es correcta, independientemente del estado del puzzle
                 if (correctCount === 3) {
                     // Selección correcta
-                    if (!GAME.puzzleCompleted[2]) {
+                    //if (!GAME.puzzleCompleted[2]) {
                         // Primera vez que completa el puzzle
                         GAME.puzzleCompleted[2] = true;
                         
@@ -2361,10 +2361,10 @@
                         setTimeout(() => {
                             showTriviaModal(2);
                         }, 1500);
-                    } else {
+                    //} else {
                         // Ya había completado el puzzle, pero seleccionó correctamente
                         fb.innerHTML = '<div class="feedback correct">¡Correcto! Ya habías completado este nivel anteriormente.</div>';
-                    }
+                    //}
                     
                     // Mantener las selecciones para mostrar feedback visual
                     // No limpiar selectedCards aquí
