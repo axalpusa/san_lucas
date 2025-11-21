@@ -951,6 +951,136 @@
             margin-bottom: 10px;
             font-size: 14px;
         }
+        
+        /* NUEVOS ESTILOS PARA SISTEMA DE DIFICULTAD */
+        .difficulty-indicators {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+            padding: 12px;
+            background: rgba(253,230,174,0.3);
+            border-radius: 10px;
+            border-left: 4px solid var(--accent);
+        }
+        
+        .lives-container {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .lives-title {
+            font-weight: bold;
+            color: var(--accent-dark);
+        }
+        
+        .lives {
+            display: flex;
+            gap: 5px;
+        }
+        
+        .life {
+            width: 24px;
+            height: 24px;
+            background: var(--success);
+            border-radius: 50%;
+            position: relative;
+        }
+        
+        .life.lost {
+            background: var(--warning);
+            opacity: 0.3;
+        }
+        
+        .life.lost::after {
+            content: "✕";
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: var(--warning);
+            font-weight: bold;
+        }
+        
+        .timer-container {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .timer-title {
+            font-weight: bold;
+            color: var(--accent-dark);
+        }
+        
+        .timer {
+            font-size: 18px;
+            font-weight: bold;
+            padding: 5px 10px;
+            border-radius: 5px;
+            background: var(--card);
+            border: 2px solid var(--accent);
+            color: var(--accent-dark);
+            min-width: 70px;
+            text-align: center;
+        }
+        
+        .timer.warning {
+            color: var(--warning);
+            border-color: var(--warning);
+            animation: pulse 1s infinite;
+        }
+        
+        .level-difficulty {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 8px;
+        }
+        
+        .difficulty-stars {
+            display: flex;
+            gap: 3px;
+        }
+        
+        .star {
+            color: var(--gold);
+            font-size: 16px;
+        }
+        
+        .star.empty {
+            color: var(--muted);
+            opacity: 0.3;
+        }
+        
+        .game-over {
+            text-align: center;
+            padding: 20px;
+            background: var(--card);
+            border-radius: 10px;
+            border: 2px solid var(--warning);
+            margin-top: 20px;
+        }
+        
+        .game-over h3 {
+            color: var(--warning);
+            margin-bottom: 10px;
+        }
+        
+        .level-complete {
+            text-align: center;
+            padding: 20px;
+            background: var(--card);
+            border-radius: 10px;
+            border: 2px solid var(--success);
+            margin-top: 20px;
+        }
+        
+        .level-complete h3 {
+            color: var(--success);
+            margin-bottom: 10px;
+        }
     </style>
 </head>
 <body>
@@ -986,6 +1116,22 @@
 
         <main>
             <section class="card stage left" id="stage">
+                <!-- Indicadores de dificultad -->
+                <div class="difficulty-indicators" id="difficultyIndicators">
+                    <div class="lives-container">
+                        <div class="lives-title">Vidas:</div>
+                        <div class="lives" id="livesContainer"></div>
+                    </div>
+                    <div class="timer-container">
+                        <div class="timer-title">Tiempo:</div>
+                        <div class="timer" id="timer">00:00</div>
+                    </div>
+                    <div class="level-difficulty">
+                        <div>Dificultad:</div>
+                        <div class="difficulty-stars" id="difficultyStars"></div>
+                    </div>
+                </div>
+                
                 <div class="progress-container">
                     <div>Progreso del nivel</div>
                     <div class="progress-bar">
@@ -1058,7 +1204,14 @@
             levelTimes: {1: 0, 2: 0, 3: 0},
             levelScores: {1: 0, 2: 0, 3: 0},
             timers: {1: null, 2: null, 3: null},
-            churchRestored: {bell: false, altar: false, windows: false}
+            churchRestored: {bell: false, altar: false, windows: false},
+            // NUEVAS PROPIEDADES PARA DIFICULTAD
+            lives: 3,
+            maxLives: 3,
+            levelTimeLimits: {1: 180, 2: 150, 3: 120}, // Tiempos en segundos por nivel
+            levelTimeRemaining: {1: 0, 2: 0, 3: 0},
+            levelFailed: false,
+            levelComplete: false
         }
 
         // Personajes guía según la narrativa
@@ -1153,6 +1306,147 @@
                 document.getElementById('statusWindows').classList.add('restored');
             }
         }
+        
+        // NUEVAS FUNCIONES PARA SISTEMA DE DIFICULTAD
+        function renderLives() {
+            const livesContainer = document.getElementById('livesContainer');
+            livesContainer.innerHTML = '';
+            
+            for (let i = 0; i < GAME.maxLives; i++) {
+                const life = document.createElement('div');
+                life.className = i < GAME.lives ? 'life' : 'life lost';
+                livesContainer.appendChild(life);
+            }
+        }
+        
+        function updateTimer() {
+            const timerEl = document.getElementById('timer');
+            const currentLevel = GAME.currentLevel;
+            
+            if (GAME.levelTimeRemaining[currentLevel] <= 0) {
+                timerEl.textContent = '00:00';
+                timerEl.classList.add('warning');
+                
+                // Si el tiempo se agota, perder una vida
+                if (!GAME.levelFailed && !GAME.levelComplete) {
+                    loseLife();
+                }
+                return;
+            }
+            
+            // Actualizar tiempo restante
+            GAME.levelTimeRemaining[currentLevel]--;
+            
+            // Formatear tiempo para mostrar
+            const minutes = Math.floor(GAME.levelTimeRemaining[currentLevel] / 60);
+            const seconds = GAME.levelTimeRemaining[currentLevel] % 60;
+            timerEl.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+            
+            // Cambiar color cuando queden menos de 30 segundos
+            if (GAME.levelTimeRemaining[currentLevel] <= 30) {
+                timerEl.classList.add('warning');
+            } else {
+                timerEl.classList.remove('warning');
+            }
+        }
+        
+        function renderDifficultyStars() {
+            const difficultyStars = document.getElementById('difficultyStars');
+            difficultyStars.innerHTML = '';
+            
+            const starsCount = GAME.currentLevel; // Más estrellas según el nivel
+            const maxStars = 3;
+            
+            for (let i = 0; i < maxStars; i++) {
+                const star = document.createElement('div');
+                star.className = i < starsCount ? 'star' : 'star empty';
+                star.textContent = '★';
+                difficultyStars.appendChild(star);
+            }
+        }
+        
+        function loseLife() {
+            if (GAME.lives <= 0) return;
+            
+            GAME.lives--;
+            renderLives();
+            
+            if (GAME.lives <= 0) {
+                // Game over
+                gameOver();
+            } else {
+                showMessage(`Has perdido una vida. Te quedan ${GAME.lives} vidas.`, 'error');
+                // Reiniciar el nivel actual
+                restartCurrentLevel();
+            }
+        }
+        
+        function gameOver() {
+            GAME.levelFailed = true;
+            
+            // Detener temporizador
+            clearInterval(GAME.timers[GAME.currentLevel]);
+            
+            const gameOverHTML = `
+                <div class="game-over">
+                    <h3>¡Game Over!</h3>
+                    <p>Te has quedado sin vidas. ¿Quieres intentarlo de nuevo?</p>
+                    <div style="margin-top: 16px;">
+                        <button id="restartGame">Reiniciar Juego</button>
+                    </div>
+                </div>
+            `;
+            
+            content.innerHTML += gameOverHTML;
+            
+            document.getElementById('restartGame').addEventListener('click', () => {
+                // Restaurar vidas y reiniciar nivel
+                GAME.lives = GAME.maxLives;
+                GAME.levelFailed = false;
+                renderLives();
+                restartCurrentLevel();
+            });
+        }
+        
+        function restartCurrentLevel() {
+            // Reiniciar tiempo para el nivel actual
+            const currentLevel = GAME.currentLevel;
+            GAME.levelTimeRemaining[currentLevel] = GAME.levelTimeLimits[currentLevel];
+            
+            // Limpiar contenido y volver a abrir el nivel
+            content.innerHTML = '';
+            openLevel(currentLevel);
+        }
+        
+        function levelComplete() {
+            GAME.levelComplete = true;
+            
+            // Detener temporizador
+            clearInterval(GAME.timers[GAME.currentLevel]);
+            
+            const levelCompleteHTML = `
+                <div class="level-complete">
+                    <h3>¡Nivel Completado!</h3>
+                    <p>Has restaurado esta parte de la iglesia y ganado ${GAME.levelScores[GAME.currentLevel]} puntos.</p>
+                    <div style="margin-top: 16px;">
+                        <button id="nextLevel">Siguiente Nivel</button>
+                    </div>
+                </div>
+            `;
+            
+            content.innerHTML += levelCompleteHTML;
+            
+            document.getElementById('nextLevel').addEventListener('click', () => {
+                GAME.levelComplete = false;
+                const nextLevel = GAME.currentLevel + 1;
+                if (nextLevel <= 3) {
+                    openLevel(nextLevel);
+                } else {
+                    showMessage('¡Felicidades! Has completado todos los niveles.', 'success');
+                }
+            });
+        }
+
         // Level selection
         document.getElementById('levels').addEventListener('click', (e) => {
             const btn = e.target.closest('.level-btn'); 
@@ -1265,14 +1559,23 @@
             GAME.currentLevel = level;
             updateProgressBar();
             
+            // Inicializar tiempo restante si no existe
+            if (!GAME.levelTimeRemaining[level]) {
+                GAME.levelTimeRemaining[level] = GAME.levelTimeLimits[level];
+            }
+            
             // Iniciar temporizador si no existe
             if (!GAME.timers[level]) {
                 GAME.levelTimes[level] = 0;
                 GAME.timers[level] = setInterval(() => {
                     GAME.levelTimes[level]++;
-                    save();
+                    updateTimer();
                 }, 1000);
             }
+            
+            // Renderizar indicadores de dificultad
+            renderLives();
+            renderDifficultyStars();
             
             if (level === 1) levelCampanario();
             if (level === 2) levelGuardián();
@@ -1473,6 +1776,9 @@
                         showMessage('¡Nivel 2 desbloqueado!', 'success');
                     }
                     
+                    // Marcar nivel como completado
+                    levelComplete();
+                    
                     save();
                 } else {
                     document.getElementById('campFeedback').innerHTML = '<div class="feedback incorrect">Algunas piezas están en posición incorrecta. Corrige las marcadas en rojo.</div>';
@@ -1613,8 +1919,13 @@
                     }
                     
                     flashEffect('El retablo recobra su brillo');
+                    
+                    // Marcar nivel como completado
+                    levelComplete();
                 } else {
                     fb.innerHTML = '<div class="feedback incorrect">Algunas selecciones no son correctas. Observa los detalles barrocos y dorados.</div>';
+                    // Perder una vida por respuesta incorrecta
+                    loseLife();
                 }
             });
 
@@ -1820,8 +2131,13 @@
                     updateChurchVisual();
                     
                     flashEffect('El altar recobra su esplendor dorado');
+                    
+                    // Marcar nivel como completado
+                    levelComplete();
                 } else {
                     fb.innerHTML = '<div class="feedback incorrect">Algunos elementos no están en su posición correcta. Revisa la tradición litúrgica.</div>';
+                    // Perder una vida por respuesta incorrecta
+                    loseLife();
                 }
             });
 
