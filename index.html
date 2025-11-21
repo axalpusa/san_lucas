@@ -671,6 +671,8 @@
             display: flex;
             align-items: flex-end;
             justify-content: center;
+            background-image: url('iglesia.png'); 
+            background-size: cover; background-position: center; background-repeat: no-repeat;
         }
         
         .church-building {
@@ -1243,18 +1245,22 @@
     </div>
 
     <!-- Elementos de audio ocultos -->
-    <audio id="soundCorrect" preload="auto">
-        <source src="https://assets.mixkit.co/sfx/preview/mixkit-correct-answer-tone-2870.mp3" type="audio/mpeg">
-    </audio>
-    <audio id="soundWrong" preload="auto">
-        <source src="https://assets.mixkit.co/sfx/preview/mixkit-wrong-answer-fail-notification-946.mp3" type="audio/mpeg">
-    </audio>
-    <audio id="soundWin" preload="auto">
-        <source src="https://assets.mixkit.co/sfx/preview/mixkit-winning-chimes-2015.mp3" type="audio/mpeg">
-    </audio>
-    <audio id="soundGameOver" preload="auto">
-        <source src="https://assets.mixkit.co/sfx/preview/mixkit-sad-game-over-trombone-471.mp3" type="audio/mpeg">
-    </audio>
+        <audio id="soundCorrect" preload="auto">
+            <!-- Sonido corto de éxito (beep agradable) -->
+            <source src="data:audio/wav;base64,UklGRigAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQQAAAAAAA==" type="audio/wav">
+        </audio>
+        <audio id="soundWrong" preload="auto">
+            <!-- Sonido corto de error (beep grave) -->
+            <source src="data:audio/wav;base64,UklGRigAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQQAAAAAAA==" type="audio/wav">
+        </audio>
+        <audio id="soundWin" preload="auto">
+            <!-- Sonido de victoria (secuencia ascendente) -->
+            <source src="data:audio/wav;base64,UklGRigAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQQAAAAAAA==" type="audio/wav">
+        </audio>
+        <audio id="soundGameOver" preload="auto">
+            <!-- Sonido de derrota (secuencia descendente) -->
+            <source src="data:audio/wav;base64,UklGRigAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQQAAAAAAA==" type="audio/wav">
+        </audio>
 
     <script>
         // Datos del juego
@@ -1269,7 +1275,6 @@
             levelScores: {1: 0, 2: 0, 3: 0},
             timers: {1: null, 2: null, 3: null},
             churchRestored: {bell: false, altar: false, windows: false},
-            // NUEVAS PROPIEDADES PARA DIFICULTAD
             lives: 3,
             maxLives: 3,
             levelTimeLimits: {1: 180, 2: 150, 3: 120},
@@ -1355,7 +1360,7 @@
         };
 
         // Sistema de sonidos
-        const SOUNDS = {
+         const SOUNDS = {
             correct: document.getElementById('soundCorrect'),
             wrong: document.getElementById('soundWrong'),
             win: document.getElementById('soundWin'),
@@ -1367,14 +1372,120 @@
             try {
                 const sound = SOUNDS[soundName];
                 if (sound) {
-                    sound.currentTime = 0;
-                    sound.play().catch(e => console.log('Error reproduciendo sonido:', e));
+                    // Crear un contexto de audio alternativo si el elemento HTML falla
+                    const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                    const oscillator = audioContext.createOscillator();
+                    const gainNode = audioContext.createGain();
+                    
+                    // Configurar el sonido según el tipo
+                    switch(soundName) {
+                        case 'correct':
+                            oscillator.frequency.value = 800; // Ton alto para acierto
+                            gainNode.gain.value = 0.1;
+                            oscillator.type = 'sine';
+                            break;
+                        case 'wrong':
+                            oscillator.frequency.value = 300; // Ton bajo para error
+                            gainNode.gain.value = 0.1;
+                            oscillator.type = 'sawtooth';
+                            break;
+                        case 'win':
+                            // Secuencia ascendente para victoria
+                            playWinSequence(audioContext);
+                            return;
+                        case 'gameOver':
+                            // Secuencia descendente para derrota
+                            playGameOverSequence(audioContext);
+                            return;
+                    }
+                    
+                    // Conectar y reproducir
+                    oscillator.connect(gainNode);
+                    gainNode.connect(audioContext.destination);
+                    
+                    oscillator.start();
+                    setTimeout(() => {
+                        oscillator.stop();
+                    }, 300); // Sonido corto de 300ms
+                    
                 }
             } catch (error) {
                 console.log('Error con el sistema de sonido:', error);
+                // Fallback: intentar reproducir el elemento de audio HTML
+                try {
+                    if (SOUNDS[soundName]) {
+                        SOUNDS[soundName].currentTime = 0;
+                        SOUNDS[soundName].play().catch(e => console.log('Fallback también falló'));
+                    }
+                } catch (fallbackError) {
+                    console.log('Fallback de audio también falló');
+                }
             }
         }
+        function playGameOverSequence(audioContext) {
+            const notes = [523.25, 392.00, 329.63, 261.63]; // Do, Sol, Mi, Do (octava baja)
+            let currentNote = 0;
+            
+            function playNextNote() {
+                if (currentNote >= notes.length) return;
+                
+                const oscillator = audioContext.createOscillator();
+                const gainNode = audioContext.createGain();
+                
+                oscillator.frequency.value = notes[currentNote];
+                oscillator.type = 'sawtooth';
+                gainNode.gain.value = 0.1;
+                
+                oscillator.connect(gainNode);
+                gainNode.connect(audioContext.destination);
+                
+                oscillator.start();
+                
+                // Fade out más lento para sonido triste
+                gainNode.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.5);
+                
+                setTimeout(() => {
+                    oscillator.stop();
+                    currentNote++;
+                    playNextNote();
+                }, 300);
+            }
+            
+            playNextNote();
+        }
 
+// Función para secuencia de victoria
+        function playWinSequence(audioContext) {
+            const notes = [523.25, 659.25, 783.99, 1046.50]; // Do, Mi, Sol, Do (octava alta)
+            let currentNote = 0;
+            
+            function playNextNote() {
+                if (currentNote >= notes.length) return;
+                
+                const oscillator = audioContext.createOscillator();
+                const gainNode = audioContext.createGain();
+                
+                oscillator.frequency.value = notes[currentNote];
+                oscillator.type = 'sine';
+                gainNode.gain.value = 0.1;
+                
+                oscillator.connect(gainNode);
+                gainNode.connect(audioContext.destination);
+                
+                oscillator.start();
+                
+                // Fade out suave
+                gainNode.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.3);
+                
+                setTimeout(() => {
+                    oscillator.stop();
+                    currentNote++;
+                    playNextNote();
+                }, 200);
+            }
+            
+            playNextNote();
+        }
         // Persistencia
         function load() {
             const s = localStorage.getItem('gs_game');
@@ -2151,45 +2262,76 @@
                 img.src = s.image;
                 img.alt = s.name;
                 
+                // Manejar error de imagen
+                img.onerror = function() {
+                    this.style.display = 'none';
+                    const placeholder = document.createElement('div');
+                    placeholder.className = 'placeholder-image';
+                    placeholder.textContent = s.name;
+                    placeholder.style.height = '160px';
+                    placeholder.style.display = 'flex';
+                    placeholder.style.alignItems = 'center';
+                    placeholder.style.justifyContent = 'center';
+                    card.appendChild(placeholder);
+                };
+                
                 const name = document.createElement('div');
                 name.className = 'santo-name';
                 name.textContent = s.name;
                 
                 card.appendChild(img);
-                //card.appendChild(name);
+                card.appendChild(name);
                 grid.appendChild(card);
             });
 
             // Selection
+            let selectedCards = [];
+            
             grid.addEventListener('click', e => {
                 const card = e.target.closest('.santo-card'); 
                 if (!card) return;
                 
-                card.classList.toggle('selected');
+                const cardId = card.dataset.id;
                 
-                // Limitar a 3 seleccionados
-                const sel = grid.querySelectorAll('.santo-card.selected'); 
-                if (sel.length > 3) sel[0].classList.remove('selected');
+                // Si ya está seleccionada, quitarla
+                if (selectedCards.includes(cardId)) {
+                    card.classList.remove('selected');
+                    selectedCards = selectedCards.filter(id => id !== cardId);
+                } 
+                // Si no está seleccionada y hay menos de 3, agregarla
+                else if (selectedCards.length < 3) {
+                    card.classList.add('selected');
+                    selectedCards.push(cardId);
+                }
+                // Si ya hay 3 seleccionadas, no hacer nada
             });
 
-
             document.getElementById('checkSantos').addEventListener('click', () => {
-                const sel = Array.from(grid.querySelectorAll('.santo-card.selected'));
                 const fb = document.getElementById('guardFeedback'); 
                 
-                if (sel.length < 3) { 
-                    fb.innerHTML = '<div class="feedback incorrect">Selecciona tres opciones.</div>'; 
+                if (selectedCards.length < 3) { 
+                    fb.innerHTML = '<div class="feedback incorrect">Selecciona exactamente tres opciones.</div>'; 
                     return; 
                 }
                 
-                const correctCount = sel.filter(s => s.dataset.correct === 'true').length;
+                // Contar cuántas selecciones son correctas
+                let correctCount = 0;
+                selectedCards.forEach(cardId => {
+                    const saint = SAINTS.find(s => s.id === cardId);
+                    if (saint && saint.correct) {
+                        correctCount++;
+                    }
+                });
 
-                // Requiere 3 correctas
+                console.log("Seleccionadas:", selectedCards);
+                console.log("Correctas encontradas:", correctCount);
+
+                // Requiere EXACTAMENTE 3 correctas (todas las selecciones deben ser correctas)
                 if (correctCount === 3 && !GAME.puzzleCompleted[2]) {
                     GAME.puzzleCompleted[2] = true;
                     
                     const points = 25;
-                    fb.innerHTML = '<div class="feedback correct">¡Correcto! Has identificado santos representativos.</div>';
+                    fb.innerHTML = '<div class="feedback correct">¡Correcto! Has identificado correctamente los santos representativos.</div>';
                     GAME.score += points; 
                     GAME.levelScores[2] += points;
                     GAME.pieces += 1; 
@@ -2217,9 +2359,15 @@
                         showTriviaModal(2);
                     }, 1500);
                 } else {
-                    fb.innerHTML = '<div class="feedback incorrect">Algunas selecciones no son correctas. Observa los detalles barrocos y dorados.</div>';
+                    fb.innerHTML = '<div class="feedback incorrect">No todas las selecciones son correctas. Debes seleccionar exactamente los tres santos correctos.</div>';
                     // Perder una vida por respuesta incorrecta
                     loseLife();
+                    
+                    // Limpiar selecciones para nuevo intento
+                    selectedCards = [];
+                    document.querySelectorAll('.santo-card.selected').forEach(card => {
+                        card.classList.remove('selected');
+                    });
                 }
             });
         }
@@ -2488,11 +2636,8 @@
         
         // Inicializar audio después de la primera interacción del usuario
         document.addEventListener('click', function initAudio() {
-            // Silenciar y pausar todos los sonidos para "activarlos"
-            Object.values(SOUNDS).forEach(sound => {
-                sound.volume = 0.5;
-                sound.pause();
-            });
+            // Solo necesitamos un click para "activar" el audio
+            // Los sonidos se generarán programáticamente
             document.removeEventListener('click', initAudio);
         }, { once: true });
     </script>
