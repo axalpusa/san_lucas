@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>La Memoria de San Lucas de Colán</title>
+    <title>La memoria de San Lucas de Colán</title>
     <style>
         :root {
             --bg: #fde6ae;
@@ -1146,8 +1146,8 @@
                 <img src="logo.png" alt="La Memoria de San Lucas de Colán">
             </div>
             <div>
-                <h1>La Memoria de San Lucas de Colán</h1>
-                <small>El Origen de un pueblo</small>
+                <h1>La memoria de San Lucas de Colán</h1>
+                <small>El origen de un pueblo</small>
             </div>
         </header>
 
@@ -1163,9 +1163,9 @@
             </div>
             <div style="min-width:320px">
                 <div class="levels" id="levels">
-                    <div class="level-btn active" data-level="1" id="btn-l1">Nivel 1<br><small>El Campanario</small></div>
-                    <div class="level-btn locked" data-level="2" id="btn-l2">Nivel 2<br><small>El Guardián</small></div>
-                    <div class="level-btn locked" data-level="3" id="btn-l3">Nivel 3<br><small>Sacerdote Fundador</small></div>
+                    <div class="level-btn active" data-level="1" id="btn-l1">Nivel 1<br><small>El campanario</small></div>
+                    <div class="level-btn locked" data-level="2" id="btn-l2">Nivel 2<br><small>El guardián</small></div>
+                    <div class="level-btn locked" data-level="3" id="btn-l3">Nivel 3<br><small>Sacerdote fundador</small></div>
                 </div>
             </div>
         </div>
@@ -1180,7 +1180,7 @@
                 </div>
                 
                 <!-- REPRESENTACIÓN VISUAL MEJORADA DE LA IGLESIA -->
-                <div class="church-title">Iglesia San Lucas de Colán - Progreso de Restauración</div>
+                <div class="church-title">Iglesia San Lucas de Colán - Progreso de restauración</div>
                 <div class="church-visual" id="churchVisual">
                     
                     <div class="church-element church-bell" id="churchBell">
@@ -1235,7 +1235,7 @@
                     </div>
                 </div>
                 
-                <h3>Muro de Honor</h3>
+                <h3>Muro de honor</h3>
                 <div class="muro" id="muro"></div>
                 
                 <h4 style="margin-top:16px">Coleccionables</h4>
@@ -1291,17 +1291,17 @@
         // Personajes guía según la narrativa
         const CHARACTERS = {
             1: {
-                name: "El Antiguo Campanero",
+                name: "El antiguo campanero",
                 avatar: "🔔",
                 description: "Soy el campanero que ha visto pasar siglos. Ayúdame a restaurar el campanario y aprenderás sobre nuestra historia."
             },
             2: {
-                name: "El Guardián del Templo",
+                name: "El guardián del templo",
                 avatar: "🛡️",
                 description: "Como guardián, conozco cada rincón y cada santo de esta iglesia. Identifícalos correctamente."
             },
             3: {
-                name: "El Sacerdote Fundador",
+                name: "El sacerdote fundador",
                 avatar: "📖",
                 description: "Fui testigo de la fundación de esta iglesia. Ayúdame a reconstruir el altar principal con sus símbolos sagrados."
             }
@@ -1309,9 +1309,9 @@
 
         // Coleccionables actualizados a los personajes del juego
         const COLLECTIBLES = [
-            { id: 1, name: "El Antiguo Campanero", image: "campanario.png" },
-            { id: 2, name: "El Guardián del Templo", image: "retablo.png" },
-            { id: 3, name: "El Sacerdote Fundador", image: "altar.jpg" },
+            { id: 1, name: "El antiguo campanero", image: "campanario.png" },
+            { id: 2, name: "El guardián del templo", image: "retablo.png" },
+            { id: 3, name: "El sacerdote fundador", image: "altar.jpg" },
         ];
 
         // Imágenes de santos para el nivel 2
@@ -1328,20 +1328,20 @@
         const ALTAR_ELEMENTS = [
             { id: 'cruz', name: 'Cruz', description: 'Símbolo central del cristianismo', correctPosition: 1 },
             { id: 'candelabros', name: 'Candelabros', description: 'Iluminan el espacio sagrado', correctPosition: 2 },
-            { id: 'sagrario', name: 'Sagrario', description: 'Guarda la Eucaristía', correctPosition: 3 },
-            { id: 'mantel', name: 'Mantel Blanco', description: 'Representa la pureza', correctPosition: 4 },
+            { id: 'sagrario', name: 'Sagrario', description: 'Guarda la eucaristía', correctPosition: 3 },
+            { id: 'mantel', name: 'Mantel blanco', description: 'Representa la pureza', correctPosition: 4 },
             { id: 'flores', name: 'Flores', description: 'Símbolo de vida y belleza', correctPosition: 5 },
-            { id: 'evangelio', name: 'Libro del Evangelio', description: 'Contiene la palabra de Dios', correctPosition: 6 }
+            { id: 'evangelio', name: 'Libro del evangelio', description: 'Contiene la palabra de Dios', correctPosition: 6 }
         ];
 
         // Preguntas de trivia por nivel
         const TRIVIA_QUESTIONS = {
             1: {
-                question: "¿De qué material está hecha la iglesia San Lucas de Colán?",
+                question: "¿En qué año exacto se terminó de construir la Iglesia San Lucas de Colán?",
                 options: [
-                    { text: "Piedra Caliza", correct: true },
-                    { text: "Arcilla", correct: false },
-                    { text: "Madera y Barro", correct: false }
+                    { text: "1536", correct: true },
+                    { text: "1750", correct: false },
+                    { text: "1920", correct: false }
                 ]
             },
             2: {
@@ -1736,11 +1736,11 @@
             let buttonsHTML = '';
             if (hasLives) {
                 buttonsHTML = `
-                    <button id="retryTrivia">Volver a Intentar</button>
+                    <button id="retryTrivia">Volver a intentar</button>
                 `;
             } else {
                 buttonsHTML = `
-                    <button id="restartLevel">Reiniciar Nivel</button>
+                    <button id="restartLevel">Reiniciar nivel</button>
                 `;
             }
             
@@ -1788,8 +1788,8 @@
                     <h3>¡Nivel ${level} Completado!</h3>
                     <p>Has restaurado esta parte de la iglesia y ganado ${GAME.levelScores[level]} puntos.</p>
                     <div class="modal-buttons">
-                        ${level < 3 ? '<button id="nextLevelBtn">Siguiente Nivel</button>' : ''}
-                        <button id="menuBtn">Volver al Menú</button>
+                        ${level < 3 ? '<button id="nextLevelBtn">Siguiente nivel</button>' : ''}
+                        <button id="menuBtn">Volver al menú</button>
                     </div>
                 </div>
             `;
@@ -2237,10 +2237,10 @@
                 </div>
                 
                 <div class="historical-fact">
-                    Combina elementos coloniales y prehispánicos que reflejan la fusión cultural del territorio y convirtiéndose en un legado histórico de valor espiritual e identidad.  
+                    Según Andrés Garay Albújar y Julio Talledo, la iglesia es un Monumento Histórico Nacional , sus pinturas más destacadas remite al barroco, y son valoradas por su peculiaridad y vínculo con la historia local.
                 </div>
                 
-                <h2>Nivel 2: El Guardián del Templo</h2>
+                <h2>Nivel 2: El Guardián del templo</h2>
                 <p>Identifica las imágenes de santos que aparecen en los retablos. Selecciona los 3 que correspondan.</p>
                 <div class="santos-grid" id="santosGrid"></div>
                 <div style="margin-top:12px;font-size:14px;color:var(--muted);">Selecciona tres y presiona "Verificar"</div>
@@ -2283,7 +2283,7 @@
                 name.textContent = s.name;
                 
                 card.appendChild(img);
-                card.appendChild(name);
+                //card.appendChild(name);
                 grid.appendChild(card);
             });
 
@@ -2414,7 +2414,7 @@
                     Cada elemento tiene un significado litúrgico específico y debe colocarse en su posición correcta.
                 </div>
                 
-                <h2>Nivel 3: Reconstrucción del Altar</h2>
+                <h2>Nivel 3: Reconstrucción del altar</h2>
                 <p>Coloca cada elemento del altar en su posición correcta según la tradición litúrgica.</p>
                 
                 <div class="altar-container">
