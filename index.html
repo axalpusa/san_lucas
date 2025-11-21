@@ -23,6 +23,7 @@
             margin: 0;
             padding: 0;
         }
+
         
         body {
             font-family: 'Inter', 'Segoe UI', Arial, sans-serif;
@@ -1217,33 +1218,31 @@
             </section>
 
             <aside class="card stage right">
-                <!-- Indicadores de dificultad sobre el muro de honor -->
-                <div class="difficulty-indicators" id="difficultyIndicators">
-                    <div class="lives-timer-container">
-                        <div class="lives-container">
-                            <div class="lives-title">Vidas:</div>
-                            <div class="lives" id="livesContainer"></div>
-                        </div>
-                        <div class="timer-container">
-                            <div class="timer-title">Tiempo:</div>
-                            <div class="timer" id="timer">00:00</div>
-                        </div>
-                    </div>
-                    <div class="level-difficulty">
-                        <div>Dificultad:</div>
-                        <div class="difficulty-stars" id="difficultyStars"></div>
-                    </div>
-                </div>
-                
-                <h3>Muro de Honor</h3>
-                <div class="muro" id="muro"></div>
-                
-                <h4 style="margin-top:16px">Coleccionables</h4>
-                <div class="collectibles" id="collectibles"></div>
-                <footer>
-                    <small>Completa los niveles para desbloquear todas las piezas</small>
-                </footer>
-            </aside>
+    <!-- Indicadores de dificultad sobre el muro de honor -->
+    <div class="difficulty-indicators" id="difficultyIndicators">
+        <div class="lives-container">
+            <div class="lives-title">Vidas:</div>
+            <div class="lives" id="livesContainer"></div>
+        </div>
+        <div class="timer-container">
+            <div class="timer-title">Tiempo:</div>
+            <div class="timer" id="timer">00:00</div>
+        </div>
+        <div class="level-difficulty">
+            <div>Dificultad:</div>
+            <div class="difficulty-stars" id="difficultyStars"></div>
+        </div>
+    </div>
+    
+    <h3>Muro de Honor</h3>
+    <div class="muro" id="muro"></div>
+    
+    <h4 style="margin-top:16px">Coleccionables</h4>
+    <div class="collectibles" id="collectibles"></div>
+    <footer>
+        <small>Completa los niveles para desbloquear todas las piezas</small>
+    </footer>
+</aside>
         </main>
     </div>
 
@@ -1263,26 +1262,28 @@
 
     <script>
         // Datos del juego
-        const GAME = {
-            score: 0,
-            pieces: 0,
-            unlocked: [1],
-            collectibles: [],
-            muro: [],
-            progress: {1: 0, 2: 0, 3: 0},
-            levelTimes: {1: 0, 2: 0, 3: 0},
-            levelScores: {1: 0, 2: 0, 3: 0},
-            timers: {1: null, 2: null, 3: null},
-            churchRestored: {bell: false, altar: false, windows: false},
-            // NUEVAS PROPIEDADES PARA DIFICULTAD
-            lives: 3,
-            maxLives: 3,
-            levelTimeLimits: {1: 180, 2: 150, 3: 120}, // Tiempos en segundos por nivel
-            levelTimeRemaining: {1: 0, 2: 0, 3: 0},
-            levelFailed: false,
-            levelComplete: false,
-            puzzleCompleted: {1: false, 2: false, 3: false}
-        }
+        // En la sección de inicialización de GAME, agregar:
+const GAME = {
+    score: 0,
+    pieces: 0,
+    unlocked: [1],
+    collectibles: [],
+    muro: [],
+    progress: {1: 0, 2: 0, 3: 0},
+    levelTimes: {1: 0, 2: 0, 3: 0},
+    levelScores: {1: 0, 2: 0, 3: 0},
+    timers: {1: null, 2: null, 3: null},
+    churchRestored: {bell: false, altar: false, windows: false},
+    // NUEVAS PROPIEDADES PARA DIFICULTAD
+    lives: 3,
+    maxLives: 3,
+    levelTimeLimits: {1: 180, 2: 150, 3: 120},
+    levelTimeRemaining: {1: 0, 2: 0, 3: 0},
+    levelFailed: false,
+    levelComplete: false,
+    puzzleCompleted: {1: false, 2: false, 3: false},
+    currentLevel: 1 // ← AGREGAR ESTA LÍNEA CRÍTICA
+}
 
         // Personajes guía según la narrativa
         const CHARACTERS = {
@@ -1380,16 +1381,25 @@
         }
 
         // Persistencia
-        function load() {
-            const s = localStorage.getItem('gs_game');
-            if (s) Object.assign(GAME, JSON.parse(s));
-            renderStatus(); 
-            renderMuro(); 
-            renderCollectibles(); 
-            updateLevelButtons();
-            updateProgressBar();
-            updateChurchVisual();
-        }
+       function load() {
+    const s = localStorage.getItem('gs_game');
+    if (s) {
+        const savedData = JSON.parse(s);
+        Object.assign(GAME, savedData);
+    }
+    
+    // Asegurar que currentLevel existe
+    if (!GAME.currentLevel) {
+        GAME.currentLevel = 1;
+    }
+    
+    renderStatus(); 
+    renderMuro(); 
+    renderCollectibles(); 
+    updateLevelButtons();
+    updateProgressBar();
+    updateChurchVisual();
+}
         
         function save() { 
             localStorage.setItem('gs_game', JSON.stringify(GAME)); 
@@ -1427,16 +1437,35 @@
         }
         
         // NUEVAS FUNCIONES PARA SISTEMA DE DIFICULTAD
-        function renderLives() {
-            const livesContainer = document.getElementById('livesContainer');
-            livesContainer.innerHTML = '';
-            
-            for (let i = 0; i < GAME.maxLives; i++) {
-                const life = document.createElement('div');
-                life.className = i < GAME.lives ? 'life' : 'life lost';
-                livesContainer.appendChild(life);
-            }
-        }
+      function renderLives() {
+    const livesContainer = document.getElementById('livesContainer');
+    if (!livesContainer) return; // ← Agregar esta verificación
+    
+    livesContainer.innerHTML = '';
+    
+    for (let i = 0; i < GAME.maxLives; i++) {
+        const life = document.createElement('div');
+        life.className = i < GAME.lives ? 'life' : 'life lost';
+        livesContainer.appendChild(life);
+    }
+}
+
+function renderDifficultyStars() {
+    const difficultyStars = document.getElementById('difficultyStars');
+    if (!difficultyStars) return; // ← Agregar esta verificación
+    
+    difficultyStars.innerHTML = '';
+    
+    const starsCount = GAME.currentLevel;
+    const maxStars = 3;
+    
+    for (let i = 0; i < maxStars; i++) {
+        const star = document.createElement('div');
+        star.className = i < starsCount ? 'star' : 'star empty';
+        star.textContent = '★';
+        difficultyStars.appendChild(star);
+    }
+}
         
         function updateTimer() {
             const timerEl = document.getElementById('timer');
@@ -1470,20 +1499,7 @@
             }
         }
         
-        function renderDifficultyStars() {
-            const difficultyStars = document.getElementById('difficultyStars');
-            difficultyStars.innerHTML = '';
-            
-            const starsCount = GAME.currentLevel; // Más estrellas según el nivel
-            const maxStars = 3;
-            
-            for (let i = 0; i < maxStars; i++) {
-                const star = document.createElement('div');
-                star.className = i < starsCount ? 'star' : 'star empty';
-                star.textContent = '★';
-                difficultyStars.appendChild(star);
-            }
-        }
+ 
         
         function loseLife() {
             if (GAME.lives <= 0) return;
@@ -1531,15 +1547,19 @@
             });
         }
         
-        function restartCurrentLevel() {
-            // Reiniciar tiempo para el nivel actual
-            const currentLevel = GAME.currentLevel;
-            GAME.levelTimeRemaining[currentLevel] = GAME.levelTimeLimits[currentLevel];
-            
-            // Limpiar contenido y volver a abrir el nivel
-            content.innerHTML = '';
-            openLevel(currentLevel);
-        }
+      // En la función restartCurrentLevel():
+function restartCurrentLevel() {
+    // Reiniciar tiempo para el nivel actual
+    const currentLevel = GAME.currentLevel;
+    GAME.levelTimeRemaining[currentLevel] = GAME.levelTimeLimits[currentLevel];
+    
+    // Limpiar timers
+    clearAllTimers();
+    
+    // Limpiar contenido y volver a abrir el nivel
+    content.innerHTML = '';
+    openLevel(currentLevel);
+}
         
         function showTriviaModal(level) {
             const trivia = TRIVIA_QUESTIONS[level];
@@ -1638,46 +1658,66 @@
             }
         }
         
-        function completeLevel(level) {
-            GAME.levelComplete = true;
+  function completeLevel(level) {
+    GAME.levelComplete = true;
+    
+    // Detener temporizador
+    clearInterval(GAME.timers[level]);
+    
+    playSound('win');
+    
+    const modal = document.createElement('div');
+    modal.className = 'modal-overlay';
+    modal.innerHTML = `
+        <div class="modal level-complete-modal">
+            <h3>¡Nivel ${level} Completado!</h3>
+            <p>Has restaurado esta parte de la iglesia y ganado ${GAME.levelScores[level]} puntos.</p>
+            <div class="modal-buttons">
+                ${level < 3 ? '<button id="nextLevelBtn">Siguiente Nivel</button>' : ''}
+                <button id="menuBtn">Volver al Menú</button>
+            </div>
+        </div>
+    `;
+    
+    document.body.appendChild(modal);
+    
+    // Botón para siguiente nivel
+    if (level < 3) {
+        document.getElementById('nextLevelBtn').addEventListener('click', () => {
+            GAME.levelComplete = false;
+            modal.remove();
             
-            // Detener temporizador
-            clearInterval(GAME.timers[level]);
+            const nextLevel = level + 1;
+            if (!GAME.unlocked.includes(nextLevel)) {
+                GAME.unlocked.push(nextLevel);
+                updateLevelButtons();
+            }
             
-            // Reproducir sonido de victoria
-            playSound('win');
-            
-            const modal = document.createElement('div');
-            modal.className = 'modal-overlay';
-            modal.innerHTML = `
-                <div class="modal level-complete-modal">
-                    <h3>¡Nivel ${level} Completado!</h3>
-                    <p>Has restaurado esta parte de la iglesia y ganado ${GAME.levelScores[level]} puntos.</p>
-                    <div class="modal-buttons">
-                        <button id="continueBtn">Continuar</button>
-                    </div>
-                </div>
-            `;
-            
-            document.body.appendChild(modal);
-            
-            document.getElementById('continueBtn').addEventListener('click', () => {
-                GAME.levelComplete = false;
-                modal.remove();
-                
-                // Desbloquear siguiente nivel
-                const nextLevel = level + 1;
-                if (nextLevel <= 3 && !GAME.unlocked.includes(nextLevel)) {
-                    GAME.unlocked.push(nextLevel);
-                    updateLevelButtons();
-                    showMessage('¡Nivel ' + nextLevel + ' desbloqueado!', 'success');
-                }
-                
-                // Volver al menú principal
-                openLevel(1);
-            });
+            // Ir al siguiente nivel en lugar del menú
+            document.querySelectorAll('.level-btn').forEach(b => b.classList.remove('active'));
+            document.getElementById('btn-l' + nextLevel).classList.add('active');
+            openLevel(nextLevel);
+        });
+    }
+    
+    // Botón para volver al menú
+    document.getElementById('menuBtn').addEventListener('click', () => {
+        GAME.levelComplete = false;
+        modal.remove();
+        
+        // Desbloquear siguiente nivel si existe
+        const nextLevel = level + 1;
+        if (nextLevel <= 3 && !GAME.unlocked.includes(nextLevel)) {
+            GAME.unlocked.push(nextLevel);
+            updateLevelButtons();
         }
         
+        // Volver al menú principal (nivel 1)
+        document.querySelectorAll('.level-btn').forEach(b => b.classList.remove('active'));
+        document.getElementById('btn-l1').classList.add('active');
+        openLevel(1);
+    });
+}
         function showErrorModal(message) {
             const modal = document.createElement('div');
             modal.className = 'modal-overlay';
@@ -1717,12 +1757,16 @@
             openLevel(lvl);
         });
 
-        // Reset
-        document.getElementById('reset').addEventListener('click', () => {
-            if (!confirm('¿Estás seguro de que quieres reiniciar todo el progreso?')) return;
-            localStorage.removeItem('gs_game'); 
-            location.reload();
-        });
+        // En el evento reset:
+document.getElementById('reset').addEventListener('click', () => {
+    if (!confirm('¿Estás seguro de que quieres reiniciar todo el progreso?')) return;
+    
+    // Limpiar todos los timers
+    clearAllTimers();
+    
+    localStorage.removeItem('gs_game'); 
+    location.reload();
+});
 
         // Render muro mejorado
         function renderMuro() { 
@@ -1806,33 +1850,48 @@
         }
 
         // Level content generators
-        function openLevel(level) {
-            GAME.currentLevel = level;
-            updateProgressBar();
-            
-            // Inicializar tiempo restante si no existe
-            if (!GAME.levelTimeRemaining[level]) {
-                GAME.levelTimeRemaining[level] = GAME.levelTimeLimits[level];
-            }
-            
-            // Iniciar temporizador si no existe
-            if (!GAME.timers[level]) {
-                GAME.levelTimes[level] = 0;
-                GAME.timers[level] = setInterval(() => {
-                    GAME.levelTimes[level]++;
-                    updateTimer();
-                }, 1000);
-            }
-            
-            // Renderizar indicadores de dificultad
-            renderLives();
-            renderDifficultyStars();
-            
-            if (level === 1) levelCampanario();
-            if (level === 2) levelGuardián();
-            if (level === 3) levelSacerdote();
-        }
-
+function openLevel(level) {
+    GAME.currentLevel = level;
+    
+    // Limpiar contenido primero
+    content.innerHTML = '';
+    
+    // Reiniciar estado del nivel
+    GAME.levelFailed = false;
+    GAME.levelComplete = false;
+    
+    // Inicializar tiempo restante
+    if (!GAME.levelTimeRemaining[level]) {
+        GAME.levelTimeRemaining[level] = GAME.levelTimeLimits[level];
+    }
+    
+    // Reiniciar timer si existe
+    if (GAME.timers[level]) {
+        clearInterval(GAME.timers[level]);
+        GAME.timers[level] = null;
+    }
+    
+    // Renderizar contenido del nivel
+    if (level === 1) levelCampanario();
+    if (level === 2) levelGuardian();
+    if (level === 3) levelSacerdote();
+    
+    // Iniciar nuevo temporizador después de renderizar
+    GAME.levelTimes[level] = 0;
+    GAME.timers[level] = setInterval(() => {
+        GAME.levelTimes[level]++;
+        updateTimer();
+    }, 1000);
+    
+    // Actualizar UI
+    updateProgressBar();
+    
+    // Renderizar indicadores de dificultad
+    setTimeout(() => {
+        renderLives();
+        renderDifficultyStars();
+    }, 100);
+}
         // Level 1 - Puzzle + Trivia
         function levelCampanario() {
             const character = CHARACTERS[1];
@@ -1886,20 +1945,27 @@
             }
             
             // Create pieces with individual images
-            pieces.forEach(id => {
-                const p = document.createElement('div'); 
-                p.className = 'piece'; 
-                p.draggable = true; 
-                p.dataset.id = id; 
-                
-                const img = document.createElement('img');
-                // Cambiamos la imagen del campanario por una iglesia
-                img.src = `campanario_${id}.png`;
-                img.alt = `Pieza ${id}`;
-                p.appendChild(img);
-                
-                piecesArea.appendChild(p);
-            });
+         // En la creación de piezas del nivel 1:
+pieces.forEach(id => {
+    const p = document.createElement('div'); 
+    p.className = 'piece'; 
+    p.draggable = true; 
+    p.dataset.id = id; 
+    
+    const img = document.createElement('img');
+    img.src = `campanario_${id}.png`;
+    img.alt = `Pieza ${id}`;
+    
+    // Manejar error de imagen
+    img.onerror = function() {
+        // Crear un placeholder si la imagen no carga
+        this.style.display = 'none';
+        p.innerHTML = `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:var(--gold);color:var(--brown-dark);font-weight:bold;border-radius:6px;">${id}</div>`;
+    };
+    
+    p.appendChild(img);
+    piecesArea.appendChild(p);
+});
 
             // Drag events - VERSIÓN CORREGIDA
             document.querySelectorAll('.piece').forEach(el => {
@@ -1967,75 +2033,98 @@
                 checkPuzzle();
             });
 
-            function checkPuzzle() {
-                const slots = document.querySelectorAll('.slot');
-                let allCorrect = true;
-                let allFilled = true;
-                
-                slots.forEach(slot => {
-                    const piece = slot.querySelector('.piece');
-                    if (!piece) {
-                        allFilled = false;
-                        return;
-                    }
-                    
-                    const pieceId = piece.dataset.id;
-                    const correctId = slot.dataset.correctId;
-                    
-                    if (pieceId !== correctId) {
-                        allCorrect = false;
-                    }
-                });
-                
-                if (!allFilled) {
-                    document.getElementById('campFeedback').innerHTML = '<div class="feedback incorrect">Coloca todas las piezas en el rompecabezas.</div>';
-                    return;
-                }
-                
-                if (allCorrect && !GAME.puzzleCompleted[1]) {
-                    GAME.puzzleCompleted[1] = true;
-                    
-                    // Premiar al jugador por completar el puzzle
-                    const points = 20;
-                    GAME.score += points; 
-                    GAME.levelScores[1] += points;
-                    GAME.pieces += 1; 
-                    if (!GAME.collectibles.includes(1)) {
-                        GAME.collectibles.push(1); 
-                    }
-                    GAME.muro.push({name: 'Jugador local', score: GAME.score});
-                    GAME.progress[1] = 100;
-                    GAME.churchRestored.bell = true;
-                    
-                    save(); 
-                    renderStatus(); 
-                    renderCollectibles(); 
-                    renderMuro();
-                    updateProgressBar();
-                    updateChurchVisual();
-                    
-                    document.getElementById('campFeedback').innerHTML = '<div class="feedback correct">¡Campanario restaurado! Has ganado 1 pieza de la fe.</div>';
-                    
-                    // Efecto visual
-                    flashEffect('¡La campana suena de nuevo!');
-                    
-                    // Reproducir sonido de acierto
-                    playSound('correct');
-                    
-                    // Mostrar trivia después de completar el puzzle
-                    setTimeout(() => {
-                        showTriviaModal(1);
-                    }, 1500);
-                    
-                    save();
-                } else if (!allCorrect) {
-                    document.getElementById('campFeedback').innerHTML = '<div class="feedback incorrect">Algunas piezas están en posición incorrecta. Corrige las marcadas en rojo.</div>';
-                }
-            }
+      function checkPuzzle() {
+    const slots = document.querySelectorAll('.slot');
+    let allCorrect = true;
+    let allFilled = true;
+    
+    slots.forEach(slot => {
+        const piece = slot.querySelector('.piece');
+        if (!piece) {
+            allFilled = false;
+            return;
         }
-
+        
+        const pieceId = piece.dataset.id;
+        const correctId = slot.dataset.correctId;
+        
+        if (pieceId !== correctId) {
+            allCorrect = false;
+        }
+    });
+    
+    if (!allFilled) {
+        document.getElementById('campFeedback').innerHTML = '<div class="feedback incorrect">Coloca todas las piezas en el rompecabezas.</div>';
+        return;
+    }
+    
+    if (allCorrect) {
+        // SOLUCIÓN: Solo procesar la completitud si no estaba completado antes
+        if (!GAME.puzzleCompleted[1]) {
+            GAME.puzzleCompleted[1] = true;
+            
+            const points = 20;
+            GAME.score += points; 
+            GAME.levelScores[1] += points;
+            GAME.pieces += 1; 
+            if (!GAME.collectibles.includes(1)) {
+                GAME.collectibles.push(1); 
+            }
+            GAME.muro.push({name: 'Jugador local', score: GAME.score});
+            GAME.progress[1] = 100;
+            GAME.churchRestored.bell = true;
+            
+            save(); 
+            renderStatus(); 
+            renderCollectibles(); 
+            renderMuro();
+            updateProgressBar();
+            updateChurchVisual();
+            
+            document.getElementById('campFeedback').innerHTML = '<div class="feedback correct">¡Campanario restaurado! Has ganado 1 pieza de la fe.</div>';
+            
+            flashEffect('¡La campana suena de nuevo!');
+            playSound('correct');
+            
+            // Mostrar trivia después de completar el puzzle
+            setTimeout(() => {
+                showTriviaModal(1);
+            }, 1500);
+            
+            save();
+        } else {
+            // Si ya estaba completado, solo mostrar mensaje
+            document.getElementById('campFeedback').innerHTML = '<div class="feedback correct">¡El campanario ya está restaurado! Procediendo a la trivia...</div>';
+            
+            // Mostrar trivia directamente
+            setTimeout(() => {
+                showTriviaModal(1);
+            }, 1000);
+        }
+    } else {
+        document.getElementById('campFeedback').innerHTML = '<div class="feedback incorrect">Algunas piezas están en posición incorrecta. Corrige las marcadas en rojo.</div>';
+    }
+}
+// Agregar esta función que falta:
+function clearAllTimers() {
+    for (let level = 1; level <= 3; level++) {
+        if (GAME.timers[level]) {
+            clearInterval(GAME.timers[level]);
+            GAME.timers[level] = null;
+        }
+    }
+}
+// Agregar al inicio del script, después de definir SOUNDS:
+document.addEventListener('click', function initAudio() {
+    // Silenciar y pausar todos los sonidos para "activarlos"
+    Object.values(SOUNDS).forEach(sound => {
+        sound.volume = 0.5;
+        sound.pause();
+    });
+    document.removeEventListener('click', initAudio);
+}, { once: true });
         // Level 2 - Identify saints + trivia
-        function levelGuardián() {
+        function levelGuardian() {
             const character = CHARACTERS[2];
             
             content.innerHTML = `
